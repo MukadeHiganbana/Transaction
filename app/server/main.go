@@ -55,7 +55,7 @@ func (*server) Transaction(ctx context.Context, req *pb.TransactionRequest) (*pb
 		log.Fatal(err)
 	}
 
-	return &pb.TransactionResponse{Response: "True"}, nil
+	return &pb.TransactionResponse{Response: "result"}, nil
 }
 
 func (*server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
