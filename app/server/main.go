@@ -75,7 +75,7 @@ func (*server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.C
 		log.Fatal(err)
 	}
 
-	_, err = tx.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)", userData.Login, userData.Password)
+	_, err = tx.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)", userData.GetLogin(), userData.GetPassword())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
