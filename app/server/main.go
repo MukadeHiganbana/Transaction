@@ -3,105 +3,89 @@ package main
 import (
 	pb "Transaction/proto"
 	"context"
-	"errors"
+	"database/sql"
 	"flag"
 	"fmt"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"log"
 	"net"
-	"strconv"
 )
-
-func init() {
-	DatabaseConnection()
-}
-
-var DB *gorm.DB
-var err error
 
 var (
 	port = flag.Int("port", 50051, "gRPC server port")
+)
+
+const (
+	host     = "localhost"
+	psqlport = 5432
+	user     = "nikolaychernikov"
+	password = "123"
+	dbname   = "transactiondb"
 )
 
 type server struct {
 	pb.UnimplementedTransactionServer
 }
 
-type User struct {
-	Login    string
-	Password string
-	Balance  string
-}
+func (*server) Transaction(ctx context.Context, req *pb.TransactionRequest) (*pb.TransactionResponse, error) {
+	userData := req.GetUser()
 
-func DatabaseConnection() {
-	host := "localhost"
-	port := "5432"
-	dbName := "transactiondb"
-	dbUser := "nikolaychernikov"
-	password := "123"
-	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		host,
-		port,
-		dbUser,
-		dbName,
-		password,
-	)
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, psqlport, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		log.Fatal("Error connecting to the database...", err)
+		return nil, err
 	}
-	fmt.Println("Database connection successful...")
-}
 
-func (*server) UpdateTransaction(ctx context.Context, req *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
-	fmt.Println("Update balance")
-	var user User
-	reqUser := req.GetUser()
+	defer db.Close()
 
-	DB.FirstOrInit(&user, map[string]interface{}{"login": reqUser.Login, "password": reqUser.Password})
-	userB1, _ := strconv.Atoi(user.Balance)
-	userB2, _ := strconv.Atoi(reqUser.Balance)
-	newBalance := userB1 + userB2
-	if newBalance < 0 {
-		return nil, errors.New("not less then 0")
+	ctx = context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
 	}
-	res := DB.Table("users").Where("login=? AND password=?", reqUser.Login, reqUser.Password).Updates(User{Balance: strconv.Itoa(newBalance)})
-	if res.RowsAffected == 0 {
-		return nil, errors.New("transaction false")
+	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = $1 + balance WHERE login = $2 AND password = $3 AND (balance + $1 >= 0)", userData.GetBalance(), userData.GetLogin(), userData.GetPassword())
+	if err != nil {
+		tx.Rollback()
+		return nil, err
 	}
-	return &pb.UpdateTransactionResponse{
-		User: &pb.User{
-			Login:    user.Login,
-			Password: user.Password,
-			Balance:  user.Balance,
-		},
-	}, nil
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &pb.TransactionResponse{Response: "True"}, nil
 }
 
 func (*server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	fmt.Println("Create User")
-	user := req.GetUser()
+	userData := req.GetUser()
 
-	userData := User{
-		Login:    user.GetLogin(),
-		Password: user.GetPassword(),
-		Balance:  "0",
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, psqlport, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		return nil, err
 	}
 
-	res := DB.Table("users").Create(&userData)
-	if res.Error != nil {
-		return nil, errors.New("user could not be created")
+	defer db.Close()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return &pb.CreateUserResponse{
-		User: &pb.User{
-			Login:    user.GetLogin(),
-			Password: user.GetPassword(),
-			Balance:  user.GetBalance(),
-		},
-	}, nil
+	_, err = tx.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)", userData.Login, userData.Password)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &pb.CreateUserResponse{Response: "True"}, nil
 }
 
 func main() {
@@ -112,7 +96,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-
 	s := grpc.NewServer()
 
 	pb.RegisterTransactionServer(s, &server{})

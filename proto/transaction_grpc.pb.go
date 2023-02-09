@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TransactionClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	UpdateTransaction(ctx context.Context, in *UpdateTransactionRequest, opts ...grpc.CallOption) (*UpdateTransactionResponse, error)
+	Transaction(ctx context.Context, in *TransactionRequest, opts ...grpc.CallOption) (*TransactionResponse, error)
 }
 
 type transactionClient struct {
@@ -43,9 +43,9 @@ func (c *transactionClient) CreateUser(ctx context.Context, in *CreateUserReques
 	return out, nil
 }
 
-func (c *transactionClient) UpdateTransaction(ctx context.Context, in *UpdateTransactionRequest, opts ...grpc.CallOption) (*UpdateTransactionResponse, error) {
-	out := new(UpdateTransactionResponse)
-	err := c.cc.Invoke(ctx, "/proto.Transaction/UpdateTransaction", in, out, opts...)
+func (c *transactionClient) Transaction(ctx context.Context, in *TransactionRequest, opts ...grpc.CallOption) (*TransactionResponse, error) {
+	out := new(TransactionResponse)
+	err := c.cc.Invoke(ctx, "/proto.Transaction/Transaction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *transactionClient) UpdateTransaction(ctx context.Context, in *UpdateTra
 // for forward compatibility
 type TransactionServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	UpdateTransaction(context.Context, *UpdateTransactionRequest) (*UpdateTransactionResponse, error)
+	Transaction(context.Context, *TransactionRequest) (*TransactionResponse, error)
 	mustEmbedUnimplementedTransactionServer()
 }
 
@@ -68,8 +68,8 @@ type UnimplementedTransactionServer struct {
 func (UnimplementedTransactionServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedTransactionServer) UpdateTransaction(context.Context, *UpdateTransactionRequest) (*UpdateTransactionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateTransaction not implemented")
+func (UnimplementedTransactionServer) Transaction(context.Context, *TransactionRequest) (*TransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Transaction not implemented")
 }
 func (UnimplementedTransactionServer) mustEmbedUnimplementedTransactionServer() {}
 
@@ -102,20 +102,20 @@ func _Transaction_CreateUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Transaction_UpdateTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTransactionRequest)
+func _Transaction_Transaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransactionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TransactionServer).UpdateTransaction(ctx, in)
+		return srv.(TransactionServer).Transaction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Transaction/UpdateTransaction",
+		FullMethod: "/proto.Transaction/Transaction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TransactionServer).UpdateTransaction(ctx, req.(*UpdateTransactionRequest))
+		return srv.(TransactionServer).Transaction(ctx, req.(*TransactionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,8 +132,8 @@ var Transaction_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Transaction_CreateUser_Handler,
 		},
 		{
-			MethodName: "UpdateTransaction",
-			Handler:    _Transaction_UpdateTransaction_Handler,
+			MethodName: "Transaction",
+			Handler:    _Transaction_Transaction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

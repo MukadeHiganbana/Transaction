@@ -18,7 +18,7 @@ var (
 type User struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
-	Balance  string `json:"balance"`
+	Balance  int32  `json:"balance"`
 }
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 			return
 		}
 		ctx.JSON(http.StatusCreated, gin.H{
-			"user": res.User,
+			"Result": res.Response,
 		})
 	})
 	r.POST("/transaction", func(ctx *gin.Context) {
@@ -70,7 +70,7 @@ func main() {
 			})
 			return
 		}
-		res, err := client.UpdateTransaction(ctx, &pb.UpdateTransactionRequest{
+		res, err := client.Transaction(ctx, &pb.TransactionRequest{
 			User: &pb.User{
 				Login:    user.Login,
 				Password: user.Password,
@@ -84,7 +84,7 @@ func main() {
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{
-			"balance": res.User,
+			"Result": res.Response,
 		})
 		return
 	})

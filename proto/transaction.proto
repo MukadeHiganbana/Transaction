@@ -6,25 +6,25 @@ option go_package=".";
 
 service Transaction {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
-  rpc UpdateTransaction(UpdateTransactionRequest) returns (UpdateTransactionResponse) {}
+  rpc Transaction(TransactionRequest) returns (TransactionResponse) {}
 }
 
 message User {
   string login = 1;
   string password = 2;
-  string balance = 3;
+  int32 balance = 3;
 }
 
 message CreateUserRequest {
   User user = 1;
 }
 message CreateUserResponse {
-  User user = 1;
+  string response = 1;
 }
 
-message UpdateTransactionRequest {
+message TransactionRequest {
   User user = 1;
 }
-message UpdateTransactionResponse{
-  User user = 1;
+message TransactionResponse{
+  string response = 1;
 }
