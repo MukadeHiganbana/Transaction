@@ -19,6 +19,7 @@ type User struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Balance  int32  `json:"balance"`
+	Email    string `json:"email"`
 }
 
 func main() {
@@ -75,6 +76,7 @@ func main() {
 				Login:    user.Login,
 				Password: user.Password,
 				Balance:  user.Balance,
+				Email:    user.Email,
 			},
 		})
 		if err != nil {
