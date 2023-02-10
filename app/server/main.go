@@ -45,7 +45,7 @@ func (*server) Transaction(ctx context.Context, req *pb.TransactionRequest) (*pb
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = $1 - balance WHERE login = $2 AND password = $3",
+	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = balance - $1 WHERE login = $2 AND password = $3",
 		userData.GetBalance(), userData.GetLogin(), userData.GetPassword())
 	if err != nil {
 		tx.Rollback()
