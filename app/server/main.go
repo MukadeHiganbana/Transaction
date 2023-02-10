@@ -45,7 +45,8 @@ func (*server) Transaction(ctx context.Context, req *pb.TransactionRequest) (*pb
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = $1 + balance WHERE login = $2 AND password = $3 AND (balance + $1 >= 0)", userData.GetBalance(), userData.GetLogin(), userData.GetPassword())
+	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = $1 + balance WHERE login = $2 AND password = $3",
+		userData.GetBalance(), userData.GetLogin(), userData.GetPassword())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -75,7 +76,8 @@ func (*server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.C
 		log.Fatal(err)
 	}
 
-	_, err = tx.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)", userData.GetLogin(), userData.GetPassword())
+	_, err = tx.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)",
+		userData.GetLogin(), userData.GetPassword())
 	if err != nil {
 		tx.Rollback()
 		return nil, err

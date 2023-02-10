@@ -1,5 +1,0 @@
-CREATE TABLE users(login TEXT NOT NULL UNIQUE PRIMARY KEY,password TEXT NOT NULL, balance TEXT DEFAULT 0);
-
-grpc
-postgresql
-proto buff
