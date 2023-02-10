@@ -90,6 +90,33 @@ func main() {
 		})
 		return
 	})
+	r.POST("/balance/update", func(ctx *gin.Context) {
+		var user User
+		err := ctx.ShouldBind(&user)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err,
+			})
+			return
+		}
+		res, err := client.UpdateBalance(ctx, &pb.UpdateBalanceRequest{
+			User: &pb.User{
+				Login:    user.Login,
+				Password: user.Password,
+				Balance:  user.Balance,
+			},
+		})
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"Result": res.Response,
+		})
+		return
+	})
 	r.Run(":5000")
 
 }

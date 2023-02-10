@@ -7,6 +7,7 @@ option go_package=".";
 service Transaction {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
   rpc Transaction(TransactionRequest) returns (TransactionResponse) {}
+  rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse) {}
 }
 
 message User {
@@ -27,5 +28,12 @@ message TransactionRequest {
   User user = 1;
 }
 message TransactionResponse{
+  string response = 1;
+}
+
+message UpdateBalanceRequest{
+  User user =1;
+}
+message UpdateBalanceResponse {
   string response = 1;
 }

@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TransactionClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	Transaction(ctx context.Context, in *TransactionRequest, opts ...grpc.CallOption) (*TransactionResponse, error)
+	UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error)
 }
 
 type transactionClient struct {
@@ -52,12 +53,22 @@ func (c *transactionClient) Transaction(ctx context.Context, in *TransactionRequ
 	return out, nil
 }
 
+func (c *transactionClient) UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error) {
+	out := new(UpdateBalanceResponse)
+	err := c.cc.Invoke(ctx, "/proto.Transaction/UpdateBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TransactionServer is the server API for Transaction service.
 // All implementations must embed UnimplementedTransactionServer
 // for forward compatibility
 type TransactionServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	Transaction(context.Context, *TransactionRequest) (*TransactionResponse, error)
+	UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error)
 	mustEmbedUnimplementedTransactionServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedTransactionServer) CreateUser(context.Context, *CreateUserReq
 }
 func (UnimplementedTransactionServer) Transaction(context.Context, *TransactionRequest) (*TransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Transaction not implemented")
+}
+func (UnimplementedTransactionServer) UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalance not implemented")
 }
 func (UnimplementedTransactionServer) mustEmbedUnimplementedTransactionServer() {}
 
@@ -120,6 +134,24 @@ func _Transaction_Transaction_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Transaction_UpdateBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TransactionServer).UpdateBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Transaction/UpdateBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TransactionServer).UpdateBalance(ctx, req.(*UpdateBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Transaction_ServiceDesc is the grpc.ServiceDesc for Transaction service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var Transaction_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Transaction",
 			Handler:    _Transaction_Transaction_Handler,
+		},
+		{
+			MethodName: "UpdateBalance",
+			Handler:    _Transaction_UpdateBalance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

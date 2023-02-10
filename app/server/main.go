@@ -65,6 +65,37 @@ func (*server) Transaction(ctx context.Context, req *pb.TransactionRequest) (*pb
 	return &pb.TransactionResponse{Response: "result"}, nil
 }
 
+func (*server) UpdateBalance(ctx context.Context, req *pb.UpdateBalanceRequest) (*pb.UpdateBalanceResponse, error) {
+	userData := req.GetUser()
+
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, psqlport, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	ctx = context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = tx.ExecContext(ctx, "UPDATE users SET balance = $1 + balance WHERE login = $2 AND password = $3",
+		userData.GetBalance(), userData.GetLogin(), userData.GetPassword())
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &pb.UpdateBalanceResponse{Response: "result"}, nil
+}
+
 func (*server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	userData := req.GetUser()
 
